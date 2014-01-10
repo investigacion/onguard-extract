@@ -25,11 +25,14 @@ function process($input_handle) {
 	$got_date = false;
 	$got_fields = false;
 	$values = null;
+	$no_skip = false;
 
 	assert_options(ASSERT_BAIL, true);
 
+	stdout(implode("\t", array('name', 'visit_type', 'host', 'organization', 'time_in', 'time_out')));
+
 	while (($line = fgets($input_handle)) !== false) {
-		$line = trim($line);
+		$line = trim($line, " \t\n\r\0\x0B\x0C"); // Need the page feed character: x0C.
 
 		if (!$line) {
 			continue;
@@ -79,6 +82,12 @@ function process($input_handle) {
 			continue;
 		}
 
+		if (starts_with('Total Visits', $line)) {
+			stderr('Done.');
+			fclose($input_handle);
+			exit(0);
+		}
+
 		assert('$got_fields');
 
 		//stderr('Line: ' . $line);
@@ -98,8 +107,9 @@ function process($input_handle) {
 
 		stderr('Processing values.');
 
-		while (($line = fgets($input_handle)) !== false) {
+		while ($no_skip or ($line = fgets($input_handle)) !== false) {
 			$line = trim($line);
+			$no_skip = false;
 
 			stderr('Iterating value line.');
 
@@ -117,11 +127,14 @@ function process($input_handle) {
 				}
 
 				stderr('Outputting values.');
-				stderr('----------------------------------------------------------------------------------------------');
+
+				//stderr('----------------------------------------------------------------------------------------------');
 				stdout(implode("\t", $values));
-				stderr('----------------------------------------------------------------------------------------------');
+				//stderr('----------------------------------------------------------------------------------------------');
+
 				$values = null;
 				$got_values = false;
+				$no_skip = true;
 
 				break 1;
 			}
