@@ -108,12 +108,11 @@ function process($input_handle) {
 		stderr('Processing values.');
 
 		while ($no_skip or ($line = fgets($input_handle)) !== false) {
-			$line = trim($line);
 			$no_skip = false;
 
 			stderr('Iterating value line.');
 
-			if ($line) {
+			if (trim($line)) {
 				$got_values = true;
 				stderr('Parsing value line.');
 			} else {
